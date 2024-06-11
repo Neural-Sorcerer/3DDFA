@@ -94,19 +94,7 @@ Several results on ALFW-2000 dataset (inferenced from model *phase1_wpdc_vdc.pth
  - Cython (For accelerating depth and PNCC render.)
  - Platform: Linux or macOS (Windows is not tested.)
 
- ```
- # installation structions
- sudo pip3 install torch torchvision # for cpu version. more option to see https://pytorch.org
- sudo pip3 install numpy scipy matplotlib
- sudo pip3 install dlib==19.5.0 # 19.15+ version may cause conflict with pytorch in Linux, this may take several minutes. If 19.5 version raises errors, you may try 19.15+ version.
- sudo pip3 install opencv-python
- sudo pip3 install cython
- ```
-
-In addition, I strongly recommend using Python3.6+ instead of older version for its better design.
-
 ### Usage
-
 1. Clone this repo (this may take some time as it is a little big)
     ```
     git clone https://github.com/cleardusk/3DDFA.git  # or git@github.com:cleardusk/3DDFA.git
@@ -115,18 +103,25 @@ In addition, I strongly recommend using Python3.6+ instead of older version for 
 
    Then, download dlib landmark pre-trained model in [Google Drive](https://drive.google.com/open?id=1kxgOZSds1HuUIlvo5sRH3PJv377qZAkE) or [Baidu Yun](https://pan.baidu.com/s/1bx-GxGf50-KDk4xz3bCYcw), and put it into `models` directory. (To reduce this repo's size, I remove some large size binary files including this model, so you should download it : ) )
 
+2. Create 3DDFA conda env
+    ```shell script
+    $ conda create --name 3DDFA python=3.11 -y
+    $ conda activate 3DDFA
+    $ pip install opencv-python torch torchvision numpy scipy matplotlib cython dlib
 
-2. Build cython module (just one line for building)
-   ```
-   cd utils/cython
-   python3 setup.py build_ext -i
-   ```
-   This is for accelerating depth estimation and PNCC render since Python is too slow in for loop.
-   
-    
-3. Run the `main.py` with arbitrary image as input
+    # This is for accelerating depth estimation and PNCC render since Python is too slow in for loop.
+    $ cd utils/cython
+    $ python setup.py build_ext -i
+    $ cd ../..
     ```
-    python3 main.py -f samples/test1.jpg
+3. Fix numpy issue
+    ```shell script
+    utils/cv_plot.py np.float --> np.float32
+    ```
+
+4. Run the `main.py` with arbitrary image as input
+    ```
+    python main.py -f samples/test1.jpg
     ```
     If you can see these output log in terminal, you run it successfully.
     ```
@@ -142,7 +137,7 @@ In addition, I strongly recommend using Python3.6+ instead of older version for 
     Save visualization result to samples/test1_3DDFA.jpg
     ```
 
-    Because `test1.jpg` has two faces, there are two `.ply` and `.obj` files (can be rendered by Meshlab or Microsoft 3D Builder) predicted. Depth, PNCC, PAF and pose estimation are all set true by default. Please run `python3 main.py -h` or review the code for more details.
+    Because `test1.jpg` has two faces, there are two `.ply` and `.obj` files (can be rendered by Meshlab or Microsoft 3D Builder) predicted. Depth, PNCC, PAF and pose estimation are all set true by default. Please run `python main.py -h` or review the code for more details.
 
     The 68 landmarks visualization result `samples/test1_3DDFA.jpg` and pose estimation result `samples/test1_pose.jpg` are shown below:
 
@@ -157,7 +152,7 @@ In addition, I strongly recommend using Python3.6+ instead of older version for 
 4. Additional example
 
     ```
-    python3 ./main.py -f samples/emma_input.jpg --bbox_init=two --dlib_bbox=false
+    python ./main.py -f samples/emma_input.jpg --bbox_init=two --dlib_bbox=false
     ```
 
 <p align="center">
@@ -173,7 +168,7 @@ In addition, I strongly recommend using Python3.6+ instead of older version for 
 ### CPU
 Just run
 ```
-python3 speed_cpu.py
+python speed_cpu.py
 ```
 
 On my MBP (i5-8259U CPU @ 2.30GHz on 13-inch MacBook Pro), based on **PyTorch v1.1.0**, with a single input, the running output is:
@@ -241,10 +236,16 @@ First, you should download the cropped testset ALFW and ALFW-2000-3D in [test.da
 Next, run the benchmark code by providing trained model path.
 I have already provided five pre-trained models in `models` directory (seen in below table). These models are trained using different loss in the first stage. The model size is about 13M due to the high efficiency of MobileNet-V1 structure.
 ```
-python3 ./benchmark.py -c models/phase1_wpdc_vdc.pth.tar
+python ./benchmark.py -c models/phase1_wpdc_vdc.pth.tar
 ```
 
 The performances of pre-trained models are shown below. In the first stage, the effectiveness of different loss is in order: WPDC > VDC > PDC. While the strategy using VDC to finetune WPDC achieves the best result.
+
+#### Implement *phase1_wpdc_vdc.pth.tar*
+```shell script
+$ python trainig/train_wpdc.sh
+$ python trainig/train_vdc.sh
+```
 
 | Model | AFLW (21 pts) | AFLW 2000-3D (68 pts) | Download Link |
 |:-:|:-:|:-:| :-: |
