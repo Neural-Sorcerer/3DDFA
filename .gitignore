@@ -3,6 +3,7 @@
 __pycache__/
 utils/__pycache__/
 test.data/
+train_aug_120x120/
 training/snapshot/
 training/logs/
 train.configs/param_all_norm.pkl*
